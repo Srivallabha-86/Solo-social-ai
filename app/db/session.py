@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
