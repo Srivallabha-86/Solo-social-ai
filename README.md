@@ -2,74 +2,130 @@
 
 AI-powered weekly social media marketing assistant for solo founders.
 
-This project helps founders plan, draft, and schedule weekly social media content with AI assistance. It combines a lightweight app shell, prompt-driven AI generation, automation workflow hooks, and a simple dashboard for content planning.
+## Overview
 
-## Features
+Solo Social AI helps founders plan and generate social media content for their weekly marketing cadence. The system is structured for real-world use with an API layer, configuration management, content services, database access, and test coverage.
 
-- AI-generated social media post concepts and captions
-- Weekly content planning workflow
-- Simple calendar dashboard for content scheduling
-- Local SQLite database for storing generated ideas and posts
-- Basic tests for AI prompt logic
-
-## Project Structure
+## Production-ready project structure
 
 ```text
 solosocial-ai/
-├── README.md
-├── requirements.txt
 ├── .gitignore
 ├── .env.example
-├── app.py
-├── ai/
-│   ├── ai_engine.py
-│   └── prompts.py
-├── automation/
-│   └── workflow.py
-├── database/
-│   └── database.py
-├── dashboard/
-│   └── content_calendar.py
+├── Dockerfile
+├── docker-compose.yml
+├── Makefile
+├── README.md
+├── pyproject.toml
+├── requirements.txt
+├── app/
+│   ├── __init__.py
+│   ├── main.py
+│   ├── api/
+│   │   ├── __init__.py
+│   │   ├── deps.py
+│   │   └── routes/
+│   │       ├── __init__.py
+│   │       ├── health.py
+│   │       └── content.py
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── config.py
+│   │   └── logging.py
+│   ├── db/
+│   │   ├── __init__.py
+│   │   ├── base.py
+│   │   └── session.py
+│   ├── models/
+│   │   ├── __init__.py
+│   │   └── content.py
+│   ├── schemas/
+│   │   ├── __init__.py
+│   │   └── content.py
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── content_service.py
+│   │   ├── calendar_service.py
+│   │   └── openai_service.py
+│   └── utils/
+│       └── __init__.py
+├── scripts/
+│   └── init_db.py
 ├── tests/
-│   └── test_ai_engine.py
+│   ├── __init__.py
+│   ├── conftest.py
+│   └── test_health.py
 ├── docs/
 │   └── project_plan.md
 └── .env
 ```
 
-## Quick start
+## Stack
+
+- FastAPI for the API layer
+- SQLAlchemy for persistence
+- Pydantic for validation
+- OpenAI integration for content generation
+- SQLite by default for local development
+- pytest for automated testing
+
+## Getting started
 
 1. Create a virtual environment:
+
    ```bash
    python -m venv .venv
    source .venv/bin/activate
    ```
+
 2. Install dependencies:
+
    ```bash
    pip install -r requirements.txt
    ```
-3. Copy the environment template:
+
+3. Copy environment variables:
+
    ```bash
    cp .env.example .env
    ```
-4. Add your API keys to `.env`.
-5. Run the app:
+
+4. Start the application:
+
    ```bash
-   python app.py
+   uvicorn app.main:app --reload
    ```
+
+5. Visit the API docs:
+
+   - http://localhost:8000/docs
+   - http://localhost:8000/redoc
 
 ## Environment variables
 
-- `OPENAI_API_KEY`: API key used by the AI engine.
-- `DATABASE_PATH`: Optional custom SQLite path.
+- `APP_NAME` — application name
+- `APP_ENV` — environment (`dev`, `prod`, `test`)
+- `APP_DEBUG` — debug mode
+- `DATABASE_URL` — database connection string
+- `OPENAI_API_KEY` — OpenAI API key
+- `OPENAI_MODEL` — default model used for generation
 
-## Roadmap
+## Development commands
 
-- Add content generation prompts for LinkedIn, X, and Instagram
-- Build a weekly planning workflow for founders
-- Improve dashboard UI for monthly content plans
-- Add scheduler support for publishing workflows
+```bash
+make install
+make test
+make run
+make format
+```
+
+## Production notes
+
+- Use PostgreSQL in production instead of SQLite.
+- Store secrets in environment variables and a secret manager.
+- Enable structured logging and health checks.
+- Add DB migrations with Alembic for schema management.
 
 ## License
 
-This project is currently for internal prototype and experimentation.
+This project is intended for internal and commercial experimentation by solo founders.
