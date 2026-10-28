@@ -4,6 +4,7 @@ from app.models.content import ContentIdea  # Register the database model
 
 from app.api.routes.content import router as content_router
 from app.api.routes.health import router as health_router
+from app.api.routes.calendar import router as calendar_router
 from app.core.config import settings
 from app.db.session import init_db
 
@@ -27,6 +28,7 @@ app.add_middleware(
 
 app.include_router(health_router)
 app.include_router(content_router, prefix="/api/v1")
+app.include_router(calendar_router, prefix="/api/v1")
 
 
 @app.get("/")
