@@ -4,6 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes.content import router as content_router
 from app.api.routes.health import router as health_router
 from app.core.config import settings
+from app.db.session import init_db
+
+init_db()
 
 app = FastAPI(
     title=settings.app_name,

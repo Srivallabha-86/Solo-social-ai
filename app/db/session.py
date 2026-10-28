@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from datetime import datetime
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
@@ -16,7 +16,12 @@ engine = create_engine(settings.database_url, future=True, echo=settings.app_deb
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-def get_db() -> Any:
+def init_db() -> None:
+    """Create database tables for all mapped models."""
+    Base.metadata.create_all(bind=engine)
+
+
+def get_db():
     db = SessionLocal()
     try:
         yield db

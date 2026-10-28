@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from datetime import datetime
 
 from sqlalchemy.orm import Session
 
@@ -12,7 +12,12 @@ class ContentService:
         self.db = db
 
     def create_content_idea(self, topic: str, platform: str, content: str) -> ContentIdea:
-        idea = ContentIdea(topic=topic, platform=platform, content=content, created_at="2024-01-01T00:00:00")
+        idea = ContentIdea(
+            topic=topic,
+            platform=platform,
+            content=content,
+            created_at=datetime.utcnow(),
+        )
         self.db.add(idea)
         self.db.commit()
         self.db.refresh(idea)
