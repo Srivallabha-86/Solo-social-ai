@@ -1,131 +1,117 @@
 # Solo Social AI
 
-AI-powered weekly social media marketing assistant for solo founders.
+Solo Social AI is a backend MVP for planning a week of social content, drafting
+platform-specific captions, and managing saved content and calendar posts.
 
-## Overview
+## Features
 
-Solo Social AI helps founders plan and generate social media content for their weekly marketing cadence. The system is structured for real-world use with an API layer, configuration management, content services, database access, and test coverage.
+- FastAPI endpoints for health checks, content ideas, and calendar posts.
+- Local caption generation by default; optional OpenAI generation via environment
+  configuration.
+- SQLite persistence for saved drafts and calendar plans.
+- Content and calendar listing, filtering, updates, and deletion.
+- Request validation and automated API/service tests.
 
-## Production-ready project structure
+Live social publishing, user authentication, database migrations, and background
+scheduling are not part of this MVP.
 
-```text
-solosocial-ai/
-├── .gitignore
-├── .env.example
-├── Dockerfile
-├── docker-compose.yml
-├── Makefile
-├── README.md
-├── pyproject.toml
-├── requirements.txt
-├── app/
-│   ├── __init__.py
-│   ├── main.py
-│   ├── api/
-│   │   ├── __init__.py
-│   │   ├── deps.py
-│   │   └── routes/
-│   │       ├── __init__.py
-│   │       ├── health.py
-│   │       └── content.py
-│   ├── core/
-│   │   ├── __init__.py
-│   │   ├── config.py
-│   │   └── logging.py
-│   ├── db/
-│   │   ├── __init__.py
-│   │   ├── base.py
-│   │   └── session.py
-│   ├── models/
-│   │   ├── __init__.py
-│   │   └── content.py
-│   ├── schemas/
-│   │   ├── __init__.py
-│   │   └── content.py
-│   ├── services/
-│   │   ├── __init__.py
-│   │   ├── content_service.py
-│   │   ├── calendar_service.py
-│   │   └── openai_service.py
-│   └── utils/
-│       └── __init__.py
-├── scripts/
-│   └── init_db.py
-├── tests/
-│   ├── __init__.py
-│   ├── conftest.py
-│   └── test_health.py
-├── docs/
-│   └── project_plan.md
-└── .env
+## Requirements
+
+- Python 3.11 or newer
+- pip
+
+## Run locally (Windows PowerShell)
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+Copy-Item .env.example .env
+python -m uvicorn app.main:app --reload
 ```
 
-## Stack
+Open the interactive API docs at <http://127.0.0.1:8000/docs>. The health check
+is available at <http://127.0.0.1:8000/health>.
 
-- FastAPI for the API layer
-- SQLAlchemy for persistence
-- Pydantic for validation
-- OpenAI integration for content generation
-- SQLite by default for local development
-- pytest for automated testing
+By default, the app uses local generation and creates `solo_social_ai.db` in the
+working directory. No API key is required for local generation.
 
-## Getting started
+## Optional OpenAI generation
 
-1. Create a virtual environment:
+Set the following in `.env` to use OpenAI for generated captions:
 
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate
-   ```
-
-2. Install dependencies:
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. Copy environment variables:
-
-   ```bash
-   cp .env.example .env
-   ```
-
-4. Start the application:
-
-   ```bash
-   uvicorn app.main:app --reload
-   ```
-
-5. Visit the API docs:
-
-   - http://localhost:8000/docs
-   - http://localhost:8000/redoc
-
-## Environment variables
-
-- `APP_NAME` — application name
-- `APP_ENV` — environment (`dev`, `prod`, `test`)
-- `APP_DEBUG` — debug mode
-- `DATABASE_URL` — database connection string
-- `OPENAI_API_KEY` — OpenAI API key
-- `OPENAI_MODEL` — default model used for generation
-
-## Development commands
-
-```bash
-make install
-make test
-make run
-make format
+```dotenv
+AI_PROVIDER=openai
+OPENAI_API_KEY=your-key
+OPENAI_MODEL=gpt-4o-mini
 ```
 
-## Production notes
+Keep `.env` private; it is ignored by Git. Setting `AI_PROVIDER=local` restores
+local generation without making external API calls.
 
-- Use PostgreSQL in production instead of SQLite.
-- Store secrets in environment variables and a secret manager.
-- Enable structured logging and health checks.
-- Add DB migrations with Alembic for schema management.
+## API overview
 
-## License
+All application endpoints are under `/api/v1`.
 
-This project is intended for internal and commercial experimentation by solo founders.
+| Method | Path | Purpose |
+|---|---|---|
+| `POST` | `/content` | Save a content draft |
+| `POST` | `/content/generate` | Generate and save a caption |
+| `GET` | `/content` | List drafts; optional `platform`, `limit`, and `offset` |
+| `GET` | `/content/{id}` | Get a draft |
+| `PATCH` | `/content/{id}` | Update a draft |
+| `DELETE` | `/content/{id}` | Delete a draft |
+| `POST` | `/calendar/weekly` | Create and save a seven-day plan |
+| `GET` | `/calendar` | List posts; optional date range, status, `limit`, and `offset` |
+| `GET` | `/calendar/{id}` | Get a calendar post |
+| `PATCH` | `/calendar/{id}` | Update a calendar post |
+| `DELETE` | `/calendar/{id}` | Delete a calendar post |
+
+Example requests:
+
+```powershell
+Invoke-RestMethod -Method Post `
+  -Uri http://127.0.0.1:8000/api/v1/content/generate `
+  -ContentType "application/json" `
+  -Body '{"topic":"Building an audience","platform":"linkedin"}'
+
+Invoke-RestMethod -Method Post `
+  -Uri http://127.0.0.1:8000/api/v1/calendar/weekly `
+  -ContentType "application/json" `
+  -Body '{"topic":"Content strategy","start_date":"2026-11-02"}'
+```
+
+Supported platforms are `linkedin`, `x`, and `instagram`. Calendar post statuses
+are `planned`, `draft`, `approved`, and `published`. The `published` status is
+for tracking only; it does not publish to a social network.
+
+## Tests and database setup
+
+```powershell
+python -m pytest -q
+python -m scripts.init_db
+```
+
+Tests use a temporary SQLite database. The application creates missing tables
+when it starts. This MVP does not include schema migrations; back up the
+database before upgrading to a version that changes its models.
+
+## Docker
+
+Copy `.env.example` to `.env`, then run:
+
+```powershell
+docker compose up --build
+```
+
+Docker stores SQLite data in a named volume so it persists across container
+restarts.
+
+## Development
+
+The application code is under `app/`; `ai/`, `automation/`, `dashboard/`, and
+`database/` contain supporting prototype modules. The documented FastAPI
+service is the supported application entry point.
+
+Project direction and deferred production features are tracked in
+[`docs/project_plan.md`](./docs/project_plan.md).

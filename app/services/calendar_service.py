@@ -1,5 +1,10 @@
 
-from datetime import date, timedelta
+from datetime import date, datetime, time, timedelta, timezone
+
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.models.calendar import CalendarPost
 
 
 class CalendarService:
@@ -35,6 +40,9 @@ class CalendarService:
         "16:00",
     ]
 
+    def __init__(self, db: Session):
+        self.db = db
+
     def build_weekly_plan(
         self,
         topic: str,
@@ -64,3 +72,74 @@ class CalendarService:
 
         return plan
 
+    def create_weekly_plan(
+        self,
+        topic: str,
+        start_date: date | None = None,
+    ) -> list[CalendarPost]:
+        plan = self.build_weekly_plan(topic, start_date)
+        posts = [
+            CalendarPost(
+                scheduled_date=datetime.combine(
+                    date.fromisoformat(item["date"]),
+                    time.min,
+                    tzinfo=timezone.utc,
+                ),
+                topic=item["topic"],
+                theme=item["theme"],
+                platform=item["platform"],
+                suggested_time=item["suggested_time"],
+                status=item["status"],
+            )
+            for item in plan
+        ]
+        self.db.add_all(posts)
+        self.db.commit()
+        for post in posts:
+            self.db.refresh(post)
+        return posts
+
+    def list_posts(
+        self,
+        start_date: date | None = None,
+        end_date: date | None = None,
+        status: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[CalendarPost]:
+        statement = select(CalendarPost).order_by(
+            CalendarPost.scheduled_date,
+            CalendarPost.id,
+        )
+        if start_date is not None:
+            start = datetime.combine(start_date, time.min, tzinfo=timezone.utc)
+            statement = statement.where(CalendarPost.scheduled_date >= start)
+        if end_date is not None:
+            end = datetime.combine(
+                end_date + timedelta(days=1),
+                time.min,
+                tzinfo=timezone.utc,
+            )
+            statement = statement.where(CalendarPost.scheduled_date < end)
+        if status is not None:
+            statement = statement.where(CalendarPost.status == status)
+        statement = statement.offset(offset).limit(limit)
+        return list(self.db.scalars(statement).all())
+
+    def get_post(self, post_id: int) -> CalendarPost | None:
+        return self.db.get(CalendarPost, post_id)
+
+    def update_post(
+        self,
+        post: CalendarPost,
+        changes: dict[str, str],
+    ) -> CalendarPost:
+        for field, value in changes.items():
+            setattr(post, field, value)
+        self.db.commit()
+        self.db.refresh(post)
+        return post
+
+    def delete_post(self, post: CalendarPost) -> None:
+        self.db.delete(post)
+        self.db.commit()
