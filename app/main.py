@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.models.content import ContentIdea  # Register the database model
 
+from app.models.calendar import CalendarPost
+
 from app.api.routes.content import router as content_router
 from app.api.routes.health import router as health_router
 from app.api.routes.calendar import router as calendar_router
