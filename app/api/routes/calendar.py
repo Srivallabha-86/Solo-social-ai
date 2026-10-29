@@ -6,10 +6,12 @@ from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
+from app.api.deps import get_current_user, get_db
 from app.models.calendar import CalendarPost as CalendarPostModel
+from app.models.user import User
 from app.schemas.calendar import (
     CalendarPlanRequest,
+    CalendarPostCreate,
     CalendarStatus,
     CalendarPostRead,
     CalendarPostUpdate,
@@ -19,9 +21,28 @@ from app.services.calendar_service import CalendarService
 router = APIRouter(prefix="/calendar", tags=["calendar"])
 
 
+@router.post("", response_model=CalendarPostRead, status_code=201)
+async def create_calendar_post(
+    payload: CalendarPostCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> CalendarPostRead:
+    post = CalendarService(db).create_post(
+        owner_id=current_user.id,
+        post_date=payload.date,
+        topic=payload.topic,
+        theme=payload.theme,
+        platform=payload.platform,
+        suggested_time=payload.suggested_time,
+        content=payload.content,
+    )
+    return _serialize_post(post)
+
+
 @router.post("/weekly", response_model=list[CalendarPostRead])
 async def create_weekly_calendar(
     payload: CalendarPlanRequest,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> list[CalendarPostRead]:
     """Generate a seven-day social media content plan."""
@@ -29,6 +50,7 @@ async def create_weekly_calendar(
     try:
         service = CalendarService(db)
         posts = service.create_weekly_plan(
+            owner_id=current_user.id,
             topic=payload.topic,
             start_date=payload.start_date or date.today(),
         )
@@ -56,6 +78,7 @@ def _serialize_post(post: CalendarPostModel) -> CalendarPostRead:
 
 @router.get("", response_model=list[CalendarPostRead])
 async def list_calendar_posts(
+    current_user: User = Depends(get_current_user),
     start_date: date | None = None,
     end_date: date | None = None,
     status: CalendarStatus | None = None,
@@ -66,6 +89,7 @@ async def list_calendar_posts(
     if start_date is not None and end_date is not None and end_date < start_date:
         raise HTTPException(status_code=422, detail="end_date must be on or after start_date.")
     posts = CalendarService(db).list_posts(
+        current_user.id,
         start_date,
         end_date,
         status,
@@ -78,9 +102,10 @@ async def list_calendar_posts(
 @router.get("/{post_id}", response_model=CalendarPostRead)
 async def get_calendar_post(
     post_id: int,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> CalendarPostRead:
-    post = CalendarService(db).get_post(post_id)
+    post = CalendarService(db).get_post(current_user.id, post_id)
     if post is None:
         raise HTTPException(status_code=404, detail="Calendar post not found.")
     return _serialize_post(post)
@@ -90,10 +115,11 @@ async def get_calendar_post(
 async def update_calendar_post(
     post_id: int,
     payload: CalendarPostUpdate,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> CalendarPostRead:
     service = CalendarService(db)
-    post = service.get_post(post_id)
+    post = service.get_post(current_user.id, post_id)
     if post is None:
         raise HTTPException(status_code=404, detail="Calendar post not found.")
     updated = service.update_post(
@@ -106,10 +132,11 @@ async def update_calendar_post(
 @router.delete("/{post_id}", status_code=204)
 async def delete_calendar_post(
     post_id: int,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> Response:
     service = CalendarService(db)
-    post = service.get_post(post_id)
+    post = service.get_post(current_user.id, post_id)
     if post is None:
         raise HTTPException(status_code=404, detail="Calendar post not found.")
     service.delete_post(post)

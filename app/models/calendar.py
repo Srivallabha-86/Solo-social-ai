@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import DateTime, ForeignKey, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.session import Base
 
@@ -13,6 +13,12 @@ class CalendarPost(Base):
     __tablename__ = "calendar_posts"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
+
+    owner_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+    )
 
     scheduled_date: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -58,3 +64,8 @@ class CalendarPost(Base):
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
     )
+
+    owner: Mapped[User | None] = relationship(back_populates="calendar_posts")
+
+
+from app.models.user import User

@@ -331,6 +331,23 @@
       .toast.show { transform: translateY(0); opacity: 1; }
       .error-toast { background: #8e3d31; }
 
+      .auth-gate {
+        position: fixed;
+        inset: 0;
+        z-index: 4;
+        display: grid;
+        place-items: center;
+        background: rgb(246 247 244 / 95%);
+        padding: 18px;
+      }
+
+      .auth-gate[hidden] { display: none; }
+      .auth-card { width: min(420px, 100%); border: 1px solid var(--line); border-radius: 16px; background: white; padding: 26px; box-shadow: var(--shadow); }
+      .auth-card h2 { margin: 22px 0 5px; font-size: 23px; letter-spacing: -.7px; }
+      .auth-card > p { margin: 0 0 19px; color: var(--muted); font-size: 12px; }
+      .auth-switch { margin-top: 13px !important; text-align: center; }
+      .auth-switch button { border: 0; background: transparent; padding: 0; color: var(--green); font-weight: 700; }
+
       @media (max-width: 980px) {
         .sidebar { width: 202px; }
         .main { width: calc(100% - 202px); margin-left: 202px; }
@@ -385,8 +402,9 @@
 
       <main class="main">
         <header class="topbar">
-          <span class="topbar-label">A little more consistent, every week.</span>
+          <span class="topbar-label" id="account-label">A little more consistent, every week.</span>
           <span class="avatar" aria-label="Solo founder">SF</span>
+          <button class="quiet-button" id="logout-button" type="button" hidden>Sign out</button>
         </header>
 
         <div class="content" id="overview">
@@ -509,11 +527,32 @@
         </div>
       </main>
     </div>
+    <section class="auth-gate" id="auth-gate" aria-label="Sign in">
+      <form class="auth-card" id="auth-form">
+        <div class="brand"><span class="brand-mark">s</span> solo social</div>
+        <h2 id="auth-title">Your founder workspace</h2>
+        <p id="auth-description">Create an account to keep your drafts and calendar private to you.</p>
+        <div class="field">
+          <label for="auth-email">Email</label>
+          <input id="auth-email" type="email" autocomplete="email" maxlength="320" placeholder="you@example.com" required>
+        </div>
+        <div class="field">
+          <label for="auth-password">Password</label>
+          <input id="auth-password" type="password" autocomplete="current-password" minlength="12" maxlength="128" placeholder="At least 12 characters" required>
+        </div>
+        <button class="primary button-full" id="auth-submit" type="submit">Create account</button>
+        <p class="auth-switch"><span id="auth-switch-copy">Already have an account?</span>
+          <button id="auth-switch-button" type="button">Sign in</button>
+        </p>
+      </form>
+    </section>
     <div class="toast" id="toast" role="status"></div>
     <script>
       const api = "/api/v1";
       const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
       const $ = (selector) => document.querySelector(selector);
+      let isRegisterMode = true;
+      let accessToken = sessionStorage.getItem("solo_social_access_token");
 
       function escapeHtml(value) {
         return String(value).replace(/[&<>"']/g, (character) => ({
@@ -531,10 +570,16 @@
       }
 
       async function request(path, options = {}) {
+        const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
+        if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
         const response = await fetch(`${api}${path}`, {
           ...options,
-          headers: { "Content-Type": "application/json", ...(options.headers || {}) }
+          headers
         });
+        if (response.status === 401 && !path.startsWith("/auth/")) {
+          signOut(false);
+          throw new Error("Please sign in again to continue.");
+        }
         if (!response.ok) {
           let message = `Request failed (${response.status})`;
           try {
@@ -591,6 +636,74 @@
           notify(`Could not load your workspace: ${error.message}`, true);
         }
       }
+
+      function showAuthGate() {
+        $("#auth-gate").hidden = false;
+        $("#logout-button").hidden = true;
+        $("#auth-password").setAttribute(
+          "autocomplete",
+          isRegisterMode ? "new-password" : "current-password"
+        );
+        $("#auth-password").minLength = isRegisterMode ? 12 : 1;
+        $("#auth-title").textContent = isRegisterMode ? "Create your workspace" : "Welcome back";
+        $("#auth-description").textContent = isRegisterMode
+          ? "Create an account to keep your drafts and calendar private to you."
+          : "Sign in to pick up where you left off.";
+        $("#auth-submit").textContent = isRegisterMode ? "Create account" : "Sign in";
+        $("#auth-switch-copy").textContent = isRegisterMode
+          ? "Already have an account?"
+          : "New to Solo Social AI?";
+        $("#auth-switch-button").textContent = isRegisterMode ? "Sign in" : "Create account";
+      }
+
+      function signOut(showMessage = true) {
+        accessToken = null;
+        sessionStorage.removeItem("solo_social_access_token");
+        showAuthGate();
+        if (showMessage) notify("You have signed out.");
+      }
+
+      async function startWorkspace(token, user) {
+        accessToken = token;
+        sessionStorage.setItem("solo_social_access_token", token);
+        $("#auth-gate").hidden = true;
+        $("#logout-button").hidden = false;
+        $("#account-label").textContent = user.email;
+        await loadWorkspace();
+      }
+
+      $("#auth-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const button = $("#auth-submit");
+        button.disabled = true;
+        button.textContent = isRegisterMode ? "Creating your account…" : "Signing in…";
+        try {
+          const result = await request(
+            isRegisterMode ? "/auth/register" : "/auth/login",
+            {
+              method: "POST",
+              body: JSON.stringify({
+                email: $("#auth-email").value.trim(),
+                password: $("#auth-password").value
+              })
+            }
+          );
+          await startWorkspace(result.access_token, result.user);
+          notify(isRegisterMode ? "Your private workspace is ready." : "Welcome back.");
+        } catch (error) {
+          notify(`Could not sign in: ${error.message}`, true);
+        } finally {
+          button.disabled = false;
+          showAuthGate();
+          if (accessToken) $("#auth-gate").hidden = true;
+        }
+      });
+
+      $("#auth-switch-button").addEventListener("click", () => {
+        isRegisterMode = !isRegisterMode;
+        showAuthGate();
+      });
+      $("#logout-button").addEventListener("click", () => signOut());
 
       $("#generate-form").addEventListener("submit", async (event) => {
         event.preventDefault();
@@ -667,7 +780,13 @@
         String(today.getMonth() + 1).padStart(2, "0"),
         String(today.getDate()).padStart(2, "0")
       ].join("-");
-      loadWorkspace();
+      if (accessToken) {
+        request("/auth/me")
+          .then((user) => startWorkspace(accessToken, user))
+          .catch(() => signOut(false));
+      } else {
+        showAuthGate();
+      }
     </script>
   </body>
 </html>

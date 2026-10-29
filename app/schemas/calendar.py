@@ -1,7 +1,8 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date as Date
+from datetime import datetime, time
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -17,7 +18,18 @@ class CalendarPlanRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     topic: str = Field(..., min_length=3, max_length=200)
-    start_date: date | None = None
+    start_date: Date | None = None
+
+
+class CalendarPostCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    date: Date
+    topic: str = Field(min_length=3, max_length=200)
+    theme: str = Field(min_length=2, max_length=100)
+    platform: Platform = "linkedin"
+    suggested_time: time = time(9, 0)
+    content: str | None = Field(default=None, min_length=1)
 
 
 class CalendarPost(BaseModel):
@@ -25,7 +37,7 @@ class CalendarPost(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    date: date
+    date: Date
     topic: str
     theme: str
     platform: Platform = "linkedin"
@@ -44,7 +56,9 @@ class CalendarPostUpdate(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    date: Date | None = None
     topic: str | None = Field(default=None, min_length=3, max_length=200)
+    theme: str | None = Field(default=None, min_length=2, max_length=100)
     platform: Platform | None = None
     suggested_time: str | None = Field(
         default=None,

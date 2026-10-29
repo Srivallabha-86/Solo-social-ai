@@ -74,12 +74,14 @@ class CalendarService:
 
     def create_weekly_plan(
         self,
+        owner_id: int,
         topic: str,
         start_date: date | None = None,
     ) -> list[CalendarPost]:
         plan = self.build_weekly_plan(topic, start_date)
         posts = [
             CalendarPost(
+                owner_id=owner_id,
                 scheduled_date=datetime.combine(
                     date.fromisoformat(item["date"]),
                     time.min,
@@ -99,17 +101,48 @@ class CalendarService:
             self.db.refresh(post)
         return posts
 
+    def create_post(
+        self,
+        owner_id: int,
+        post_date: date,
+        topic: str,
+        theme: str,
+        platform: str,
+        suggested_time: time,
+        content: str | None,
+    ) -> CalendarPost:
+        post = CalendarPost(
+            owner_id=owner_id,
+            scheduled_date=datetime.combine(
+                post_date,
+                time.min,
+                tzinfo=timezone.utc,
+            ),
+            topic=topic,
+            theme=theme,
+            platform=platform,
+            suggested_time=suggested_time.strftime("%H:%M"),
+            status="planned",
+            content=content,
+        )
+        self.db.add(post)
+        self.db.commit()
+        self.db.refresh(post)
+        return post
+
     def list_posts(
         self,
+        owner_id: int,
         start_date: date | None = None,
         end_date: date | None = None,
         status: str | None = None,
         limit: int = 100,
         offset: int = 0,
     ) -> list[CalendarPost]:
-        statement = select(CalendarPost).order_by(
-            CalendarPost.scheduled_date,
-            CalendarPost.id,
+        statement = (
+            select(CalendarPost)
+            .where(CalendarPost.owner_id == owner_id)
+            .order_by(CalendarPost.scheduled_date, CalendarPost.id)
         )
         if start_date is not None:
             start = datetime.combine(start_date, time.min, tzinfo=timezone.utc)
@@ -126,15 +159,25 @@ class CalendarService:
         statement = statement.offset(offset).limit(limit)
         return list(self.db.scalars(statement).all())
 
-    def get_post(self, post_id: int) -> CalendarPost | None:
-        return self.db.get(CalendarPost, post_id)
+    def get_post(self, owner_id: int, post_id: int) -> CalendarPost | None:
+        return self.db.scalar(
+            select(CalendarPost).where(
+                CalendarPost.id == post_id,
+                CalendarPost.owner_id == owner_id,
+            )
+        )
 
     def update_post(
         self,
         post: CalendarPost,
-        changes: dict[str, str],
+        changes: dict[str, object],
     ) -> CalendarPost:
         for field, value in changes.items():
+            if field == "date" and isinstance(value, date):
+                value = datetime.combine(value, time.min, tzinfo=timezone.utc)
+                field = "scheduled_date"
+            elif field == "suggested_time" and isinstance(value, time):
+                value = value.strftime("%H:%M")
             setattr(post, field, value)
         self.db.commit()
         self.db.refresh(post)

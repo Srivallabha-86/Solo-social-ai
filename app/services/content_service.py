@@ -12,8 +12,15 @@ class ContentService:
     def __init__(self, db: Session):
         self.db = db
 
-    def create_content_idea(self, topic: str, platform: str, content: str) -> ContentIdea:
+    def create_content_idea(
+        self,
+        owner_id: int,
+        topic: str,
+        platform: str,
+        content: str,
+    ) -> ContentIdea:
         idea = ContentIdea(
+            owner_id=owner_id,
             topic=topic,
             platform=platform,
             content=content,
@@ -26,18 +33,28 @@ class ContentService:
 
     def list_content_ideas(
         self,
+        owner_id: int,
         platform: str | None = None,
         limit: int = 50,
         offset: int = 0,
     ) -> list[ContentIdea]:
-        statement = select(ContentIdea).order_by(ContentIdea.id.desc())
+        statement = (
+            select(ContentIdea)
+            .where(ContentIdea.owner_id == owner_id)
+            .order_by(ContentIdea.id.desc())
+        )
         if platform is not None:
             statement = statement.where(ContentIdea.platform == platform)
         statement = statement.offset(offset).limit(limit)
         return list(self.db.scalars(statement).all())
 
-    def get_content_idea(self, content_id: int) -> ContentIdea | None:
-        return self.db.get(ContentIdea, content_id)
+    def get_content_idea(self, owner_id: int, content_id: int) -> ContentIdea | None:
+        return self.db.scalar(
+            select(ContentIdea).where(
+                ContentIdea.id == content_id,
+                ContentIdea.owner_id == owner_id,
+            )
+        )
 
     def update_content_idea(
         self,

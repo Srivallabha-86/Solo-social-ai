@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from collections.abc import Generator
+from pathlib import Path
 
+from alembic import command
+from alembic.config import Config
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
@@ -25,10 +28,11 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 def init_db() -> None:
-    """Create database tables for all mapped models."""
+    """Apply database migrations to the configured database."""
     import app.models  # noqa: F401
 
-    Base.metadata.create_all(bind=engine)
+    migration_config = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
+    command.upgrade(migration_config, "head")
 
 
 def get_db() -> Generator[Session, None, None]:

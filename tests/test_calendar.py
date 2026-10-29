@@ -59,11 +59,18 @@ def test_calendar_posts_are_persisted_and_manageable(client) -> None:
 
     updated = client.patch(
         f"/api/v1/calendar/{first_post['id']}",
-        json={"status": "draft", "content": "Draft copy for review."},
+        json={
+            "status": "draft",
+            "content": "Draft copy for review.",
+            "date": "2026-11-03",
+            "theme": "A founder lesson",
+        },
     )
     assert updated.status_code == 200
     assert updated.json()["status"] == "draft"
     assert updated.json()["content"] == "Draft copy for review."
+    assert updated.json()["date"] == "2026-11-03"
+    assert updated.json()["theme"] == "A founder lesson"
 
     filtered = client.get("/api/v1/calendar?status=draft")
     assert len(filtered.json()) == 1
@@ -78,3 +85,46 @@ def test_calendar_rejects_invalid_date_range(client) -> None:
         "/api/v1/calendar?start_date=2026-11-03&end_date=2026-11-02"
     )
     assert response.status_code == 422
+
+
+def test_create_individual_calendar_post(client) -> None:
+    response = client.post(
+        "/api/v1/calendar",
+        json={
+            "date": "2026-11-05",
+            "topic": "Founder bookkeeping",
+            "theme": "Customer lesson",
+            "platform": "linkedin",
+            "suggested_time": "10:30:00",
+            "content": "One useful lesson from building this week.",
+        },
+    )
+
+    assert response.status_code == 201
+    post = response.json()
+    assert post["date"] == "2026-11-05"
+    assert post["suggested_time"] == "10:30"
+    assert post["status"] == "planned"
+    assert post["content"] == "One useful lesson from building this week."
+
+
+def test_calendar_posts_are_private_to_their_owner(client) -> None:
+    post = client.post(
+        "/api/v1/calendar",
+        json={
+            "date": "2026-11-05",
+            "topic": "Founder bookkeeping",
+            "theme": "Customer lesson",
+        },
+    ).json()
+    second_account = client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "calendar-owner@example.com",
+            "password": "another-strong-password",
+        },
+    ).json()
+    client.headers["Authorization"] = f"Bearer {second_account['access_token']}"
+
+    assert client.get("/api/v1/calendar").json() == []
+    assert client.get(f"/api/v1/calendar/{post['id']}").status_code == 404

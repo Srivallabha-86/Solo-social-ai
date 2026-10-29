@@ -95,3 +95,15 @@ def test_openai_mode_requires_an_api_key(client, monkeypatch) -> None:
     )
     assert response.status_code == 503
     assert "OPENAI_API_KEY" in response.json()["detail"]
+
+
+def test_gemini_mode_requires_an_api_key(client, monkeypatch) -> None:
+    monkeypatch.setattr(settings, "ai_provider", "gemini")
+    monkeypatch.setattr(settings, "gemini_api_key", "")
+
+    response = client.post(
+        "/api/v1/content/generate",
+        json={"topic": "Building an audience"},
+    )
+    assert response.status_code == 503
+    assert "GEMINI_API_KEY" in response.json()["detail"]

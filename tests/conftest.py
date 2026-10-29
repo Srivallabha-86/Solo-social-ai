@@ -36,6 +36,17 @@ def client(tmp_path) -> Generator[TestClient, None, None]:
 
     application.dependency_overrides[get_db] = override_get_db
     with TestClient(application) as test_client:
+        registration = test_client.post(
+            "/api/v1/auth/register",
+            json={
+                "email": "demo@example.com",
+                "password": "demo-founder-password",
+            },
+        )
+        assert registration.status_code == 201
+        test_client.headers["Authorization"] = (
+            f"Bearer {registration.json()['access_token']}"
+        )
         yield test_client
     application.dependency_overrides.clear()
     test_engine.dispose()
