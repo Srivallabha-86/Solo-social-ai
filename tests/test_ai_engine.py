@@ -18,3 +18,15 @@ def test_build_post_copy_contains_message_and_cta():
 
     assert "Ship in public." in result
     assert "What is the one thing you are optimizing for this week?" in result
+
+
+def test_build_post_copy_adapts_to_x():
+    result = AIEngine().build_post_copy(
+        "Improving onboarding",
+        audience="independent founders",
+        platform="x",
+    )
+
+    assert "Improving onboarding" in result
+    assert "independent founders" in result
+    assert "What are you working on next?" in result

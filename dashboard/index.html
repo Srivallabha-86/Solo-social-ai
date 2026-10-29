@@ -1,0 +1,673 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f6f7f4">
+    <title>Solo Social AI — Founder workspace</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #1c2924;
+        --muted: #78827c;
+        --line: #e8ebe6;
+        --paper: #fff;
+        --canvas: #f6f7f4;
+        --green: #214f3a;
+        --green-dark: #193e2d;
+        --mint: #e9f2eb;
+        --orange: #e9a36b;
+        --shadow: 0 12px 36px rgb(34 54 43 / 6%);
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        background: var(--canvas);
+        color: var(--ink);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      button, input, select, textarea { font: inherit; }
+      button { cursor: pointer; }
+
+      .shell { display: flex; min-height: 100vh; }
+
+      .sidebar {
+        position: fixed;
+        inset: 0 auto 0 0;
+        display: flex;
+        width: 238px;
+        flex-direction: column;
+        border-right: 1px solid var(--line);
+        background: #fbfcfa;
+        padding: 27px 18px 20px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 8px;
+        color: var(--ink);
+        font-size: 17px;
+        font-weight: 750;
+        letter-spacing: -.5px;
+      }
+
+      .brand-mark {
+        display: grid;
+        width: 31px;
+        height: 31px;
+        place-items: center;
+        border-radius: 10px;
+        background: var(--green);
+        color: white;
+        font-size: 16px;
+      }
+
+      .workspace-label {
+        margin: 39px 9px 10px;
+        color: #a0a9a2;
+        font-size: 10px;
+        font-weight: 750;
+        letter-spacing: 1.4px;
+        text-transform: uppercase;
+      }
+
+      .nav { display: grid; gap: 5px; }
+
+      .nav button {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        border: 0;
+        border-radius: 9px;
+        background: transparent;
+        padding: 10px 11px;
+        color: #69746c;
+        text-align: left;
+      }
+
+      .nav button:hover, .nav button.active {
+        background: var(--mint);
+        color: var(--green);
+      }
+
+      .nav-icon { width: 19px; font-size: 17px; text-align: center; }
+
+      .sidebar-bottom { margin-top: auto; }
+
+      .founder-card {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--paper);
+        padding: 14px;
+      }
+
+      .founder-card small { color: var(--muted); }
+      .founder-card strong { display: block; margin: 4px 0 9px; font-size: 13px; }
+
+      .local-tag, .live-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 99px;
+        background: #edf5ed;
+        padding: 4px 8px;
+        color: #43724e;
+        font-size: 10px;
+        font-weight: 700;
+      }
+
+      .dot { width: 6px; height: 6px; border-radius: 50%; background: #6ea979; }
+
+      .main { width: calc(100% - 238px); margin-left: 238px; }
+
+      .topbar {
+        display: flex;
+        height: 70px;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 18px;
+        border-bottom: 1px solid var(--line);
+        background: rgb(255 255 255 / 62%);
+        padding: 0 48px;
+      }
+
+      .topbar-label { color: var(--muted); font-size: 12px; }
+      .avatar {
+        display: grid;
+        width: 34px;
+        height: 34px;
+        place-items: center;
+        border-radius: 50%;
+        background: #f1dfcf;
+        color: #775034;
+        font-size: 12px;
+        font-weight: 750;
+      }
+
+      .content { width: min(1120px, 100%); margin: 0 auto; padding: 38px 48px 56px; }
+
+      .eyebrow {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 9px;
+        color: #66836f;
+        font-size: 11px;
+        font-weight: 750;
+        letter-spacing: 1.4px;
+        text-transform: uppercase;
+      }
+
+      h1 { margin: 0; font-size: clamp(29px, 4vw, 39px); font-weight: 650; letter-spacing: -1.5px; line-height: 1.14; }
+      .intro { margin: 11px 0 27px; color: var(--muted); font-size: 14px; }
+
+      .welcome {
+        position: relative;
+        overflow: hidden;
+        border-radius: 16px;
+        background: var(--green);
+        padding: 23px 26px;
+        color: white;
+      }
+
+      .welcome:after {
+        position: absolute;
+        top: -66px;
+        right: 8%;
+        width: 205px;
+        height: 205px;
+        border: 1px solid rgb(255 255 255 / 13%);
+        border-radius: 50%;
+        box-shadow: 0 0 0 27px rgb(255 255 255 / 4%), 0 0 0 55px rgb(255 255 255 / 3%);
+        content: "";
+      }
+
+      .welcome-title { position: relative; z-index: 1; margin: 0 0 5px; font-size: 15px; font-weight: 700; }
+      .welcome-copy { position: relative; z-index: 1; max-width: 650px; margin: 0; color: #d3e2d7; font-size: 12px; }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+        margin: 20px 0 27px;
+      }
+
+      .stat {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--paper);
+        padding: 16px 18px;
+      }
+
+      .stat-label { color: var(--muted); font-size: 11px; }
+      .stat-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-top: 5px; }
+      .stat-value { font-size: 25px; font-weight: 700; letter-spacing: -.8px; }
+      .stat-note { color: #819087; font-size: 10px; }
+
+      .section-heading {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 16px;
+        margin: 27px 0 13px;
+      }
+
+      h2 { margin: 0; font-size: 17px; font-weight: 680; letter-spacing: -.3px; }
+      .section-caption { margin: 3px 0 0; color: var(--muted); font-size: 11px; }
+
+      .work-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+      .card {
+        min-width: 0;
+        border: 1px solid var(--line);
+        border-radius: 13px;
+        background: var(--paper);
+        padding: 18px;
+        box-shadow: var(--shadow);
+      }
+
+      .card-title { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; font-size: 13px; font-weight: 700; }
+      .card-icon { display: grid; width: 28px; height: 28px; place-items: center; border-radius: 8px; background: var(--mint); color: var(--green); }
+
+      label { display: block; margin-bottom: 5px; color: #59665e; font-size: 11px; font-weight: 650; }
+      .field { margin-bottom: 11px; }
+      input, select, textarea {
+        width: 100%;
+        border: 1px solid #e3e8e2;
+        border-radius: 8px;
+        outline: none;
+        background: #fff;
+        padding: 9px 10px;
+        color: var(--ink);
+        font-size: 12px;
+      }
+
+      textarea { min-height: 76px; resize: vertical; }
+      input:focus, select:focus, textarea:focus { border-color: #82a58d; box-shadow: 0 0 0 3px rgb(91 139 105 / 11%); }
+
+      .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+      .primary, .secondary, .quiet-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 36px;
+        border: 0;
+        border-radius: 8px;
+        padding: 8px 13px;
+        font-size: 11px;
+        font-weight: 700;
+        transition: background .15s ease, transform .15s ease;
+      }
+
+      .primary { background: var(--green); color: white; }
+      .primary:hover { transform: translateY(-1px); background: var(--green-dark); }
+      .secondary { border: 1px solid var(--line); background: white; color: #58665d; }
+      .secondary:hover, .quiet-button:hover { background: #f4f6f2; }
+      .quiet-button { min-height: 29px; background: transparent; padding: 5px 8px; color: #78827c; font-size: 10px; }
+      .button-full { width: 100%; }
+      button:disabled { cursor: wait; opacity: .65; }
+
+      .result-box {
+        display: none;
+        margin-top: 13px;
+        border: 1px solid #e8eee8;
+        border-radius: 9px;
+        background: #f8faf7;
+        padding: 12px;
+      }
+
+      .result-box.visible { display: block; }
+      .result-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 7px; }
+      .result-top strong { font-size: 10px; }
+      .result-text { margin: 0; color: #4c5c52; font-size: 11px; white-space: pre-wrap; }
+      .copy-button { border: 0; background: transparent; color: var(--green); font-size: 10px; font-weight: 700; }
+      .helper { margin: 9px 0 0; color: #929b94; font-size: 10px; }
+
+      .lower-grid { display: grid; grid-template-columns: 1.08fr .92fr; gap: 15px; }
+      .list-card { border: 1px solid var(--line); border-radius: 13px; background: var(--paper); box-shadow: var(--shadow); }
+      .list-head { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #eff1ed; padding: 15px 17px; }
+      .list-body { padding: 4px 17px; }
+      .draft-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; border-bottom: 1px solid #f0f2ee; padding: 12px 0; }
+      .draft-row:last-child { border-bottom: 0; }
+      .draft-title { margin: 0; font-size: 11px; font-weight: 700; }
+      .draft-snippet { display: -webkit-box; overflow: hidden; max-width: 370px; margin: 4px 0 0; color: var(--muted); font-size: 10px; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+      .platform-pill { flex-shrink: 0; border-radius: 99px; background: #f2f4f1; padding: 4px 7px; color: #68756c; font-size: 9px; text-transform: capitalize; }
+
+      .week-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 12px 14px 14px; }
+      .day-card { border: 1px solid #edf0eb; border-radius: 9px; padding: 9px; }
+      .day-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 5px; }
+      .day-name { font-size: 10px; font-weight: 750; }
+      .day-date { color: var(--muted); font-size: 9px; }
+      .day-topic { display: -webkit-box; overflow: hidden; margin: 0; color: #59665e; font-size: 10px; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+
+      .empty { padding: 23px 10px; color: #939c95; font-size: 11px; text-align: center; }
+      .toast {
+        position: fixed;
+        right: 24px;
+        bottom: 23px;
+        z-index: 5;
+        max-width: min(400px, calc(100vw - 32px));
+        transform: translateY(12px);
+        border-radius: 9px;
+        background: #25392e;
+        padding: 11px 15px;
+        color: white;
+        font-size: 11px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .2s ease, transform .2s ease;
+      }
+
+      .toast.show { transform: translateY(0); opacity: 1; }
+      .error-toast { background: #8e3d31; }
+
+      @media (max-width: 980px) {
+        .sidebar { width: 202px; }
+        .main { width: calc(100% - 202px); margin-left: 202px; }
+        .content { padding-right: 28px; padding-left: 28px; }
+        .topbar { padding-right: 28px; }
+      }
+
+      @media (max-width: 720px) {
+        .sidebar { position: static; width: 100%; height: auto; border-right: 0; border-bottom: 1px solid var(--line); padding: 13px 15px; }
+        .shell { display: block; }
+        .brand { padding: 0; }
+        .workspace-label, .sidebar-bottom { display: none; }
+        .nav { grid-template-columns: repeat(3, 1fr); gap: 3px; margin-top: 12px; }
+        .nav button { justify-content: center; gap: 6px; padding: 8px 5px; font-size: 10px; }
+        .nav-icon { width: auto; }
+        .main { width: 100%; margin: 0; }
+        .topbar { height: 52px; padding: 0 17px; }
+        .content { padding: 26px 16px 40px; }
+        .work-grid, .lower-grid { grid-template-columns: 1fr; }
+        .stats { gap: 8px; }
+        .stat { padding: 12px 10px; }
+        .stat-value { font-size: 21px; }
+        .stat-note { display: none; }
+        .welcome { padding: 19px; }
+      }
+
+      @media (max-width: 390px) {
+        .stats { grid-template-columns: 1fr 1fr; }
+        .stats .stat:last-child { grid-column: span 2; }
+        .field-row { grid-template-columns: 1fr; gap: 0; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="brand"><span class="brand-mark">s</span> solo social</div>
+        <div class="workspace-label">Workspace</div>
+        <nav class="nav" aria-label="Main navigation">
+          <button class="active" type="button" data-scroll="overview"><span class="nav-icon">⌂</span> Overview</button>
+          <button type="button" data-scroll="studio"><span class="nav-icon">✳</span> Content studio</button>
+          <button type="button" data-scroll="calendar"><span class="nav-icon">▦</span> Calendar</button>
+        </nav>
+        <div class="sidebar-bottom">
+          <div class="founder-card">
+            <small>Your workspace</small>
+            <strong>Independent founder</strong>
+            <span class="local-tag"><span class="dot"></span> Local demo mode</span>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <span class="topbar-label">A little more consistent, every week.</span>
+          <span class="avatar" aria-label="Solo founder">SF</span>
+        </header>
+
+        <div class="content" id="overview">
+          <div class="eyebrow"><span class="dot"></span> Your founder workspace</div>
+          <h1>Your next week,<br>figured out.</h1>
+          <p class="intro">Turn what you’re building into thoughtful posts—without adding another full-time job.</p>
+
+          <section class="welcome" aria-label="Welcome">
+            <p class="welcome-title">Welcome back, founder 👋</p>
+            <p class="welcome-copy">Start with a real challenge from your week. Draft a post, map out seven days, and keep everything together in one calm little workspace.</p>
+          </section>
+
+          <section class="stats" aria-label="Workspace summary">
+            <article class="stat">
+              <div class="stat-label">Saved drafts</div>
+              <div class="stat-row"><strong class="stat-value" id="draft-count">—</strong><span class="stat-note">ready to refine</span></div>
+            </article>
+            <article class="stat">
+              <div class="stat-label">Posts planned</div>
+              <div class="stat-row"><strong class="stat-value" id="planned-count">—</strong><span class="stat-note">in your calendar</span></div>
+            </article>
+            <article class="stat">
+              <div class="stat-label">AI workspace</div>
+              <div class="stat-row"><strong class="stat-value" style="font-size:18px">Ready</strong><span class="local-tag"><span class="dot"></span> Local mode</span></div>
+            </article>
+          </section>
+
+          <section id="studio">
+            <div class="section-heading">
+              <div>
+                <h2>Make something worth sharing</h2>
+                <p class="section-caption">A practical starting point for your founder story.</p>
+              </div>
+              <span class="local-tag"><span class="dot"></span> No API key needed</span>
+            </div>
+
+            <div class="work-grid">
+              <article class="card">
+                <div class="card-title"><span class="card-icon">✳</span> Draft a social post</div>
+                <form id="generate-form">
+                  <div class="field">
+                    <label for="topic">What are you working on?</label>
+                    <input id="topic" name="topic" maxlength="200" value="Growing my bookkeeping app for independent founders" required>
+                  </div>
+                  <div class="field-row">
+                    <div class="field">
+                      <label for="platform">Platform</label>
+                      <select id="platform" name="platform">
+                        <option value="linkedin">LinkedIn</option>
+                        <option value="x">X</option>
+                        <option value="instagram">Instagram</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="audience">Who is it for?</label>
+                      <input id="audience" name="audience" maxlength="100" value="solo founders">
+                    </div>
+                  </div>
+                  <button class="primary button-full" id="generate-button" type="submit"><span>✦</span> Generate a draft</button>
+                  <p class="helper">Local demo drafts are generated without sending your idea to an external service.</p>
+                </form>
+                <div class="result-box" id="draft-result" aria-live="polite">
+                  <div class="result-top">
+                    <strong>YOUR SAVED DRAFT</strong>
+                    <button class="copy-button" id="copy-draft" type="button">Copy text</button>
+                  </div>
+                  <p class="result-text" id="draft-text"></p>
+                </div>
+              </article>
+
+              <article class="card">
+                <div class="card-title"><span class="card-icon">▦</span> Plan your week</div>
+                <form id="calendar-form">
+                  <div class="field">
+                    <label for="calendar-topic">Your theme for the week</label>
+                    <input id="calendar-topic" name="topic" maxlength="200" value="Building in public as a solo founder" required>
+                  </div>
+                  <div class="field">
+                    <label for="start-date">Start date</label>
+                    <input id="start-date" name="start_date" type="date" required>
+                  </div>
+                  <button class="primary button-full" id="calendar-button" type="submit"><span>✦</span> Build my 7-day plan</button>
+                  <p class="helper">Seven prompts across LinkedIn, Instagram, and X, saved to your local demo calendar.</p>
+                </form>
+                <div class="result-box" id="calendar-result" aria-live="polite">
+                  <div class="result-top"><strong>YOUR WEEK IS ON THE CALENDAR</strong></div>
+                  <p class="result-text" id="calendar-message"></p>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <section id="calendar">
+            <div class="section-heading">
+              <div>
+                <h2>Your content, in one place</h2>
+                <p class="section-caption">Saved ideas and the plan you can actually follow.</p>
+              </div>
+              <button class="quiet-button" id="refresh-button" type="button">↻ Refresh</button>
+            </div>
+
+            <div class="lower-grid">
+              <article class="list-card">
+                <div class="list-head">
+                  <div><h2 style="font-size:13px">Recent drafts</h2><p class="section-caption">Your generated and saved ideas</p></div>
+                  <span class="platform-pill" id="draft-label">0 drafts</span>
+                </div>
+                <div class="list-body" id="draft-list"><div class="empty">Your saved drafts will show up here.</div></div>
+              </article>
+              <article class="list-card">
+                <div class="list-head">
+                  <div><h2 style="font-size:13px">This week</h2><p class="section-caption">A gentle plan, one post at a time</p></div>
+                  <span class="platform-pill" id="week-label">0 posts</span>
+                </div>
+                <div class="week-grid" id="week-list"><div class="empty" style="grid-column:1/-1">Build a weekly plan to fill your calendar.</div></div>
+              </article>
+            </div>
+          </section>
+          <p class="helper" style="margin-top:19px;text-align:center">Demo workspace • Posts are saved locally in your app database • Publishing to social platforms is not enabled</p>
+        </div>
+      </main>
+    </div>
+    <div class="toast" id="toast" role="status"></div>
+    <script>
+      const api = "/api/v1";
+      const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      const $ = (selector) => document.querySelector(selector);
+
+      function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, (character) => ({
+          "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+        })[character]);
+      }
+
+      function notify(message, error = false) {
+        const toast = $("#toast");
+        toast.textContent = message;
+        toast.classList.toggle("error-toast", error);
+        toast.classList.add("show");
+        window.clearTimeout(notify.timeout);
+        notify.timeout = window.setTimeout(() => toast.classList.remove("show"), 3200);
+      }
+
+      async function request(path, options = {}) {
+        const response = await fetch(`${api}${path}`, {
+          ...options,
+          headers: { "Content-Type": "application/json", ...(options.headers || {}) }
+        });
+        if (!response.ok) {
+          let message = `Request failed (${response.status})`;
+          try {
+            const body = await response.json();
+            if (body.detail) message = body.detail;
+          } catch (_) {
+            // Keep the HTTP status as the actionable fallback for non-JSON errors.
+          }
+          throw new Error(message);
+        }
+        return response.status === 204 ? null : response.json();
+      }
+
+      function formatDate(value, options = { month: "short", day: "numeric" }) {
+        return new Intl.DateTimeFormat(undefined, options).format(new Date(`${value}T12:00:00`));
+      }
+
+      async function loadWorkspace() {
+        try {
+          const [drafts, posts] = await Promise.all([
+            request("/content?limit=8"),
+            request("/calendar?limit=14")
+          ]);
+          $("#draft-count").textContent = drafts.length;
+          $("#planned-count").textContent = posts.length;
+          $("#draft-label").textContent = `${drafts.length} ${drafts.length === 1 ? "draft" : "drafts"}`;
+          $("#week-label").textContent = `${posts.length} ${posts.length === 1 ? "post" : "posts"}`;
+
+          $("#draft-list").innerHTML = drafts.length
+            ? drafts.map((draft) => `
+              <div class="draft-row">
+                <div>
+                  <p class="draft-title">${escapeHtml(draft.topic)}</p>
+                  <p class="draft-snippet">${escapeHtml(draft.content)}</p>
+                </div>
+                <span class="platform-pill">${escapeHtml(draft.platform)}</span>
+              </div>`).join("")
+            : '<div class="empty">Your saved drafts will show up here.</div>';
+
+          $("#week-list").innerHTML = posts.length
+            ? posts.map((post) => {
+              const date = new Date(`${post.date}T12:00:00`);
+              return `
+                <div class="day-card">
+                  <div class="day-top">
+                    <span class="day-name">${dayNames[date.getDay()]}</span>
+                    <span class="day-date">${formatDate(post.date)}</span>
+                  </div>
+                  <p class="day-topic">${escapeHtml(post.theme)} · ${escapeHtml(post.platform)}</p>
+                </div>`;
+            }).join("")
+            : '<div class="empty" style="grid-column:1/-1">Build a weekly plan to fill your calendar.</div>';
+        } catch (error) {
+          notify(`Could not load your workspace: ${error.message}`, true);
+        }
+      }
+
+      $("#generate-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const button = $("#generate-button");
+        button.disabled = true;
+        button.textContent = "Creating your draft…";
+        try {
+          const draft = await request("/content/generate", {
+            method: "POST",
+            body: JSON.stringify({
+              topic: $("#topic").value.trim(),
+              platform: $("#platform").value,
+              audience: $("#audience").value.trim() || "solo founders"
+            })
+          });
+          $("#draft-text").textContent = draft.content;
+          $("#draft-result").classList.add("visible");
+          await loadWorkspace();
+          notify("Draft generated and saved.");
+        } catch (error) {
+          notify(`Could not generate a draft: ${error.message}`, true);
+        } finally {
+          button.disabled = false;
+          button.innerHTML = "<span>✦</span> Generate a draft";
+        }
+      });
+
+      $("#calendar-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const button = $("#calendar-button");
+        button.disabled = true;
+        button.textContent = "Planning your week…";
+        try {
+          const posts = await request("/calendar/weekly", {
+            method: "POST",
+            body: JSON.stringify({
+              topic: $("#calendar-topic").value.trim(),
+              start_date: $("#start-date").value
+            })
+          });
+          $("#calendar-message").textContent = `${posts.length} post ideas are saved, starting ${formatDate(posts[0].date, { month: "long", day: "numeric", year: "numeric" })}.`;
+          $("#calendar-result").classList.add("visible");
+          await loadWorkspace();
+          notify("Your 7-day plan is saved.");
+        } catch (error) {
+          notify(`Could not build your calendar: ${error.message}`, true);
+        } finally {
+          button.disabled = false;
+          button.innerHTML = "<span>✦</span> Build my 7-day plan";
+        }
+      });
+
+      $("#copy-draft").addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText($("#draft-text").textContent);
+          notify("Draft copied to clipboard.");
+        } catch (_) {
+          notify("Clipboard access is unavailable in this browser.", true);
+        }
+      });
+
+      $("#refresh-button").addEventListener("click", loadWorkspace);
+      document.querySelectorAll("[data-scroll]").forEach((button) => {
+        button.addEventListener("click", () => {
+          document.querySelectorAll("[data-scroll]").forEach((item) => item.classList.remove("active"));
+          button.classList.add("active");
+          document.getElementById(button.dataset.scroll).scrollIntoView({ behavior: "smooth" });
+        });
+      });
+
+      const today = new Date();
+      $("#start-date").value = [
+        today.getFullYear(),
+        String(today.getMonth() + 1).padStart(2, "0"),
+        String(today.getDate()).padStart(2, "0")
+      ].join("-");
+      loadWorkspace();
+    </script>
+  </body>
+</html>

@@ -6,6 +6,7 @@ platform-specific captions, and managing saved content and calendar posts.
 ## Features
 
 - FastAPI endpoints for health checks, content ideas, and calendar posts.
+- A browser dashboard at `/` for solo founders to draft a post and plan a week.
 - Local caption generation by default; optional OpenAI generation via environment
   configuration.
 - SQLite persistence for saved drafts and calendar plans.
@@ -30,11 +31,27 @@ Copy-Item .env.example .env
 python -m uvicorn app.main:app --reload
 ```
 
-Open the interactive API docs at <http://127.0.0.1:8000/docs>. The health check
-is available at <http://127.0.0.1:8000/health>.
+Open the founder dashboard at <http://127.0.0.1:8000/> and the interactive API
+docs at <http://127.0.0.1:8000/docs>. The health check is available at
+<http://127.0.0.1:8000/health>.
 
 By default, the app uses local generation and creates `solo_social_ai.db` in the
 working directory. No API key is required for local generation.
+
+## Try the solo-founder demo
+
+1. Open <http://127.0.0.1:8000/> after starting the app.
+2. In **Draft a social post**, use the prefilled bookkeeping-app example or enter
+   your own idea, choose a platform, and select **Generate a draft**.
+3. In **Plan your week**, enter a theme and start date, then select **Build my
+   7-day plan**.
+4. See saved drafts and calendar ideas appear below. The **Local demo mode**
+   uses a deterministic sample-writing template and does not send prompts to an
+   external AI service.
+
+The demo dashboard uses the same content and calendar APIs as the REST interface.
+It saves data in the configured SQLite database; remove only that database file
+if you want to reset the demo data.
 
 ## Optional OpenAI generation
 
@@ -109,9 +126,9 @@ restarts.
 
 ## Development
 
-The application code is under `app/`; `ai/`, `automation/`, `dashboard/`, and
-`database/` contain supporting prototype modules. The documented FastAPI
-service is the supported application entry point.
+The API code is under `app/`; the single-page web dashboard is
+[`dashboard/index.html`](./dashboard/index.html). Supporting modules live in
+`ai/`, `automation/`, and `database/`.
 
 Project direction and deferred production features are tracked in
 [`docs/project_plan.md`](./docs/project_plan.md).

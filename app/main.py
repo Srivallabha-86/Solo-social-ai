@@ -1,8 +1,10 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 
 from app.api.routes.calendar import router as calendar_router
 from app.api.routes.content import router as content_router
@@ -40,8 +42,9 @@ def create_app(initialize_database: bool = True) -> FastAPI:
     application.include_router(calendar_router, prefix="/api/v1")
 
     @application.get("/")
-    async def root() -> dict[str, str]:
-        return {"message": "Solo Social AI is running"}
+    async def root() -> FileResponse:
+        page = Path(__file__).resolve().parent.parent / "dashboard" / "index.html"
+        return FileResponse(page, media_type="text/html")
 
     return application
 

@@ -1,5 +1,4 @@
 import os
-from typing import List, Dict
 
 
 class AIEngine:
@@ -19,10 +18,32 @@ class AIEngine:
         ]
         return "\n".join(ideas)
 
-    def build_post_copy(self, message: str, audience: str = "founders") -> str:
-        """Return a brief social media caption based on the message."""
+    def build_post_copy(
+        self,
+        message: str,
+        audience: str = "founders",
+        platform: str = "linkedin",
+    ) -> str:
+        """Create a useful local sample caption for the selected platform."""
+        if platform == "x":
+            return (
+                f"Building for {audience} means solving one real problem at a time.\n\n"
+                f"This week: {message}. Small, useful improvements beat trying to do "
+                "everything at once.\n\n"
+                "What are you working on next?"
+            )
+
+        if platform == "instagram":
+            return (
+                f"A small founder reminder for anyone building for {audience}:\n\n"
+                f"{message}\n\n"
+                "Listen closely. Make one useful improvement. Share what you learn.\n\n"
+                "What are you working on this week? 👇"
+            )
+
         return (
-            f"Here is a draft for {audience}:\n"
-            f"\n{message}\n\n"
-            f"What is the one thing you are optimizing for this week?"
+            f"One thing I’m learning while building for {audience}: {message}.\n\n"
+            "The best progress often comes from focusing on one real customer problem, "
+            "making a small improvement, and sharing what you learn along the way.\n\n"
+            "What is the one thing you are optimizing for this week?"
         )

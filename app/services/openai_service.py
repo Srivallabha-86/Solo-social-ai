@@ -27,8 +27,9 @@ class OpenAIService:
     ) -> str:
         if settings.ai_provider == "local":
             return AIEngine().build_post_copy(
-                f"A practical {platform} post about {topic}",
+                topic,
                 audience=audience,
+                platform=platform,
             )
 
         if not self.api_key:

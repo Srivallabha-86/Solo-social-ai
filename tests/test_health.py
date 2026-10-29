@@ -8,7 +8,8 @@ from app.main import create_app
 def test_root_route(client) -> None:
     response = client.get("/")
     assert response.status_code == 200
-    assert response.json()["message"] == "Solo Social AI is running"
+    assert response.headers["content-type"].startswith("text/html")
+    assert "Your next week" in response.text
 
 
 def test_health_route(client) -> None:
