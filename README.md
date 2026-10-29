@@ -122,10 +122,8 @@ OPENAI_API_KEY=your-key
 OPENAI_MODEL=gpt-4o-mini
 ```
 
-Keep `.env` private; it is ignored by Git. The `LIVEKIT_URL`,
-`LIVEKIT_API_KEY`, and `LIVEKIT_API_SECRET` entries in `.env.example` are
-configuration placeholders only. LiveKit voice, room, and token features are
-not implemented.
+Keep `.env` private; it is ignored by Git. LiveKit voice, room, and token
+features are not implemented, so no LiveKit credentials are needed.
 
 ## API overview
 
